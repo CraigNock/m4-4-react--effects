@@ -34,6 +34,7 @@ const ItemMake = ({numCookies, setNumCookies, purchasedItems, setPurchasedItems,
         Cost: <span>{item.cost} cookie(s)</span>, 
         Produces <span>{item.value}</span> cookies/second.
         </p>
+        <h2>{purchasedItems[item.id]}</h2>
       </StyledItem>
       )
     })}
@@ -58,14 +59,35 @@ const Game = () => {
     farm: 0,
   });
 
+//focus first item on page load
+  // const ref = React.useRef(null);
+
+  // React.useEffect(() => {
+  //   ref.current.focus();
+  // }, []);
+
+//cookie count updater
   useInterval(() => {
     const numOfGeneratedCookies = cookiesPerSec({purchasedItems});
     setNumCookies(numCookies + numOfGeneratedCookies);
   }, 1000);
-
+//title count updater
   useEffect(()=>{
-    document.title=numCookies + ' Cookies!';
+    document.title = numCookies + ' Cookies!';
+    return ()=>{document.title = `Cookie Clickaarr Workshop`};
   }, [numCookies]);
+//spacebar to click cookie
+  useEffect(()=>{
+    const handleKeydown = (ev) => {
+      if (ev.repeat) { return };
+      if (ev.code === 'Space') {
+        setNumCookies(numCookies + 1);
+        console.log('space');
+      }
+    };
+    window.addEventListener('keydown', handleKeydown);
+    return () => {window.removeEventListener('keydown', handleKeydown);}
+  });
 
   return (
     <StyledWrapper>
@@ -74,7 +96,8 @@ const Game = () => {
           <Total>{numCookies} cookies</Total>
           <p><strong>{cookiesPerSec({purchasedItems})}</strong> cookies per second</p>
         </Indicator>
-        <StyledButton onClick= {()=>setNumCookies(numCookies + 1)}>
+        <StyledButton onClick= {()=>
+          setNumCookies(numCookies + 1)}>
           <Cookie src={cookieSrc} />
         </StyledButton>
       </StyledGameArea>
@@ -103,9 +126,14 @@ const StyledGameArea = styled.div`
   place-items: center;
 `;
 
-const StyledItem = styled.div`
+const StyledItem = styled.button`
+  border: none;
   border-bottom: 1px solid gray;
   padding: 1rem;
+  background: #222;
+  color: whitesmoke;
+  text-align: left;
+  cursor: pointer;
   &:focus {
     border: 3px solid lime;
   }

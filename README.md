@@ -234,7 +234,7 @@ Write a `useEffect` hook that registers an event listener, and triggers the "coo
 
 > QUESTION: Why is it important that we clean after ourselves in React components? _HINT:_ without cleaning up, try clicking the "Return home" button, and then pressing the spacebar. Do you see anything in the console?
 
-### Exercise 6: Focusing the first store item on mount
+## Exercise 6: Focusing the first store item on mount
 
 It would be great for keyboard users if the very first item was auto-focused on mount.
 
