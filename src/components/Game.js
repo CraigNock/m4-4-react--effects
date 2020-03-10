@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 
+import useInterval from '../hooks/use-interval-hook'
 import cookieSrc from '../cookie.svg';
 
 const items = [
@@ -9,46 +10,108 @@ const items = [
   { id: 'farm', name: 'Farm', cost: 1000, value: 80 },
 ];
 
+const purchase = (numCookies, setNumCookies, purchasedItems, setPurchasedItems, itemToBuy) => {
+  if (numCookies >= itemToBuy.cost) {
+    console.log('buy ' + itemToBuy.id);
+    setNumCookies(numCookies - itemToBuy.cost);
+    let tempPurchase = purchasedItems;
+    tempPurchase[itemToBuy.id]++;
+    setPurchasedItems(tempPurchase);
+  }
+}
+
+const ItemMake = ({numCookies, setNumCookies, purchasedItems, setPurchasedItems, items}) => {
+  return (
+    <>
+    {items.map(item => {
+      return (
+      <StyledItem 
+      key={item.id}
+      onClick={()=>purchase(numCookies, setNumCookies, purchasedItems, setPurchasedItems, item)}
+      >
+        <h2>{item.name}</h2>
+        <p>
+        Cost: <span>{item.cost} cookie(s)</span>, 
+        Produces <span>{item.value}</span> cookies/second.
+        </p>
+      </StyledItem>
+      )
+    })}
+    </>
+  )
+}
+
+const cookiesPerSec = ({purchasedItems}) => {
+  let sum = 
+  (purchasedItems.cursor) + 
+  (purchasedItems.grandma * 10) + 
+  (purchasedItems.farm * 80);
+  return sum;
+}
+
 const Game = () => {
-  // TODO: Replace this with React state!
-  const numCookies = 100;
-  const purchasedItems = {
+
+  const [numCookies, setNumCookies] = React.useState(10000);
+  const [purchasedItems, setPurchasedItems] = React.useState({
     cursor: 0,
     grandma: 0,
     farm: 0,
-  };
+  });
+
+  useInterval(() => {
+    const numOfGeneratedCookies = cookiesPerSec({purchasedItems});
+    setNumCookies(numCookies + numOfGeneratedCookies);
+  }, 1000);
+
+  useEffect(()=>{
+    document.title=numCookies + ' Cookies!';
+  }, [numCookies]);
 
   return (
-    <Wrapper>
-      <GameArea>
+    <StyledWrapper>
+      <StyledGameArea>
         <Indicator>
           <Total>{numCookies} cookies</Total>
-          {/* TODO: Calcuate the cookies per second and show it here: */}
-          <strong>0</strong> cookies per second
+          <p><strong>{cookiesPerSec({purchasedItems})}</strong> cookies per second</p>
         </Indicator>
-        <Button>
+        <StyledButton onClick= {()=>setNumCookies(numCookies + 1)}>
           <Cookie src={cookieSrc} />
-        </Button>
-      </GameArea>
+        </StyledButton>
+      </StyledGameArea>
 
       <ItemArea>
         <SectionTitle>Items:</SectionTitle>
-        {/* TODO: Add <Item> instances here, 1 for each item type. */}
+        <ItemMake 
+        items={items} 
+        numCookies={numCookies}
+        setNumCookies={setNumCookies}
+        purchasedItems={purchasedItems}
+        setPurchasedItems={setPurchasedItems}
+        />
       </ItemArea>
-    </Wrapper>
+    </StyledWrapper>
   );
 };
 
-const Wrapper = styled.div`
+const StyledWrapper = styled.div`
   display: flex;
   height: 100vh;
 `;
-const GameArea = styled.div`
+const StyledGameArea = styled.div`
   flex: 1;
   display: grid;
   place-items: center;
 `;
-const Button = styled.button`
+
+const StyledItem = styled.div`
+  border-bottom: 1px solid gray;
+  padding: 1rem;
+  &:focus {
+    border: 3px solid lime;
+  }
+`;
+
+const StyledButton = styled.button`
   border: none;
   background: transparent;
   cursor: pointer;

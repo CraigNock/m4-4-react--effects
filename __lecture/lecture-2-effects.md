@@ -64,6 +64,8 @@ render(<App />)
 React.useEffect(() => {
 
 })
+
+//**note ONLY works with useState variables!**
 ```
 
 ---
@@ -71,9 +73,13 @@ React.useEffect(() => {
 It takes a "dependencies" array
 
 ```js
+const [someState, setSomeState] == useState('');
+const [someOtherState, setSomeOtherState] == useState('');
+
+
 React.useEffect(() => {
     console.log('some state changed!')
-}, [someState, someOtherState]);
+}, [someState, someOtherState]); //if any of these are updated, function gets triggered
 ```
 
 ---
@@ -139,6 +145,26 @@ const App = () => {
   
   // ...
 }
+
+//////
+
+const App = () => {
+  const [cart, setCart] = React.useState({});
+
+  //was redundant double fetching, keep updating constantly
+
+  React.useEffect(() => {
+      fetch('some-url')
+        .then(data => {
+          console.log('Got data:', data);
+          setCart(data);
+        });
+    
+      return JSON.stringify(cart, null, 2);
+  }, []);//removing this dependancy value will cause it to initially render and fetch
+  
+  // ...blah other stuff
+}
 ```
 
 ---
@@ -157,7 +183,10 @@ Update the following snippets to make use of `useEffect`
 const App = () => {
   const [count, setCount] = React.useState(0);
 
-  document.title = `You have clicked ${count} times`;
+  //was just "document.title = `You have clicked ${count} times`;"
+  React.useEffect(()=> {
+    document.title = `You have clicked ${count} times`;
+  }, [count]);
 
   return (
     <button onClick={() => setCount(count + 1)}>
@@ -165,6 +194,8 @@ const App = () => {
     </button>
   );
 }
+
+//done
 ```
 
 ---
@@ -173,8 +204,12 @@ const App = () => {
 const App = ({ color }) => {
   const [value, setValue] = React.useState(false);
 
-  window.localStorage.setItem('value', value);
-  window.localStorage.setItem('color', color);
+  React.useEffect(()=>{
+    window.localStorage.setItem('value', value);
+  }, [value])
+  React.useEffect(()=>{
+    window.localStorage.setItem('color', color);
+  }, [color])
 
   return (
     <div>
@@ -185,24 +220,34 @@ const App = ({ color }) => {
     </div>
   );
 }
+//done (we are assuming for exercise that color is a useState variable)
 ```
 
 ---
 
 ```js
 const Modal = ({ handleClose }) => {
-  window.addEventListener('keydown', (ev) => {
-    if (ev.code === 'Escape') {
-      handleClose();
-    }
-  });
-
+  React.useEffect(()=>{
+    window.addEventListener('keydown', (ev) => {
+      if (ev.code === 'Escape') {
+        handleClose();
+      }
+    });
+  }, []);
+  // was just :
+  // window.addEventListener('keydown', (ev) => {
+  //     if (ev.code === 'Escape') {
+  //       handleClose();
+  //     }
+  //   }); 
   return (
     <div>
       Modal stuff
     </div>
   );
 }
+
+// this makes it only trigger/addevent listener on mount, rather than add one every rerender...
 ```
 
 ---
@@ -315,9 +360,10 @@ Make sure to do the appropriate cleanup work
 // seTimeout is similar to setInterval...
 const App = () => {
   React.useEffect(() => {
-    window.setTimeout(() => {
+    const timeo = window.setTimeout(() => {
       console.log('1 second after update!')
-    });
+    }, 10000);
+    return () => {clearTimeout(timeo)};
   }, [])
 
   return null;
@@ -328,11 +374,16 @@ const App = () => {
 
 ```js
 const App = () => {
+  const keyHandle = (ev) => {
+    console.log('You pressed: ' + ev.code);
+  };
+
   React.useEffect(() => {
-    window.addEventListener('keydown', (ev) => {
-      console.log('You pressed: ' + ev.code);
-    })
-  }, [])
+    window.addEventListener('keydown', keyHandle);
+    return ()=>{
+      window.removeEventListener('keydown', keyHandle);
+    }
+  }, []);
 
   return null;
 }
@@ -403,6 +454,37 @@ const App = ({ path }) => {
 
 ```js
 // refactoring time...
+//make your own hook! (remember must start with 'use')
+//custom hooks(makes allowed to use/contain react hooks), also must contain at least one hook
+const useMousePos = () => {
+  const [mousePosition, setMousePosition] = React.useState({
+    x: null,
+    y: null
+  });
+
+  React.useEffect(() => {
+    const handleMousemove = (ev) => {
+      setMousePosition({ x: ev.clientX, y: ev.clientY });
+    };
+
+    window.addEventListener('mousemove', handleMousemove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMousemove)
+    }
+  }, []);
+
+  return mousePosition;
+}
+
+const App = ({ path }) => {
+  const mousePosition = useMousePos();
+  return (
+    <div>
+      The mouse is at {mousePosition.x}, {mousePosition.y}.
+    </div>
+  )
+}
 
 ```
 </div>
@@ -431,6 +513,32 @@ const App = ({ path }) => {
   return (
     <span>
       Data: {JSON.stringify(data)}
+    </span>
+  );
+}
+
+/////
+
+const useDataHook = (path) => {
+  const [data, setData] = React.useState(null);
+
+  React.useEffect(() => {
+    fetch(path)
+      .then(res => res.json())
+      .then(newData => {
+        setData(newData);
+      })
+  }, [path])
+
+  return data; //useEffect is async by nature, thus useData is too?
+  //regardless it's gonna wait for the useEffect to finish before returning the data
+}
+
+const App = ({ path }) => {
+  let gotData = useDataHook(path);
+  return (
+    <span>
+      Data: {JSON.stringify(gotData)}
     </span>
   );
 }

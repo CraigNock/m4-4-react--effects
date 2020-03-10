@@ -19,6 +19,8 @@ Cannot call hooks from anywhere
 const [data, setData] = React.useState(null);
 
 const App = () => {
+  //const [data, setData] = React.useState(null); should be here
+
   return <div>{data.name}</div>;
 };
 ```
@@ -38,6 +40,8 @@ const getData = () => {
 };
 
 const App = () => {
+  //const [data, setData] = React.useState(null); should be here
+
   const data = getData();
   return <div>{data.name}</div>;
 };
@@ -77,6 +81,30 @@ const Button = ({ type, children }) => {
   if (type === 'primary') {
     const [color, setColor] = React.useState('red');
 
+    return (
+      <button
+        style={{ color }}
+        onMouseEnter={() => {
+          setColor('purple');
+        }}
+        onMouseLeave={() => {
+          setColor('red');
+        }}
+      >
+        {children}
+      </button>
+    );
+  } else {
+    return <button style={{ backgroundColor: 'purple' }}>{children}</button>;
+  }
+};
+
+//////
+
+const Button = ({ type, children }) => {
+  const [color, setColor] = React.useState('red');
+  
+  if (type === 'primary') {
     return (
       <button
         style={{ color }}

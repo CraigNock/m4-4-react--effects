@@ -12,8 +12,8 @@ One way to do this:
 const Form = () => {
   React.useEffect(() => {
     const firstNameInput = document.querySelector('#first-name');
-
-    firstNameInput.focus();
+//focuses element on render, but don't do it this way
+    firstNameInput.focus(); 
   }, []);
 
   return (
@@ -60,7 +60,7 @@ const Form = () => {
     <>
       <label>
         First Name
-        <input ref={firstNameRef} />
+        <input ref={firstNameRef} /> 
       </label>
       <br />
       <label>
@@ -78,8 +78,8 @@ What are some things you notice about this code?
 
 ---
 
-- `ref` attribute on React elements is a _special attribute_, like `key`
-- `useRef` returns an object: `{ current: <input />}`
+- `ref` attribute on React elements is a _special attribute_, like `key`//no access to, reserved name, can't pass
+- `useRef` returns an object: `{ current: <input />}`//in this case
 - You can specify an initial value for the ref, in this case `null`
 
 ---
@@ -98,15 +98,19 @@ Use `useRef`
 
 ```js
 const ConfirmButton = () => {
-  React.useEffect(() => {
-    const btn = document.getElementById('confirm-button');
+  const btn = React.useRef(null);
 
-    if (btn) {
-      btn.focus();
+  React.useEffect(() => {
+    if (btn) {  //gotta make sure it exists!
+      btn.focus(); //on render the button will be focused
     }
   }, []);
 
-  return <button id="confirm-button">Confirm</button>;
+  return (
+  <button ref={btn} id="confirm-button">
+  Confirm
+  </button>;
+  )
 };
 ```
 
@@ -169,6 +173,7 @@ const App = () => {
   return (
     <ul>
       <Item ref={ref}>One</Item>
+      {//item is a react component, not a dom node, this will break(will work on styled elements though)}
       <Item>two</Item>
       <Item>three</Item>
     </ul>
