@@ -10,9 +10,9 @@ const items = [
   { id: 'farm', name: 'Farm', cost: 1000, value: 80 },
 ];
 
+//PURCHASING ITEMS
 const purchase = (numCookies, setNumCookies, purchasedItems, setPurchasedItems, itemToBuy) => {
   if (numCookies >= itemToBuy.cost) {
-    console.log('buy ' + itemToBuy.id);
     setNumCookies(numCookies - itemToBuy.cost);
     let tempPurchase = purchasedItems;
     tempPurchase[itemToBuy.id]++;
@@ -20,28 +20,34 @@ const purchase = (numCookies, setNumCookies, purchasedItems, setPurchasedItems, 
   }
 }
 
-const ItemMake = ({numCookies, setNumCookies, purchasedItems, setPurchasedItems, items}) => {
+//MAKES STORE ITEMS
+const ItemMake = ({numCookies, setNumCookies, purchasedItems, setPurchasedItems, item, index}) => {
+  //focus first item on page load
+  //map is external as useRef cannot be in a callback
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (index === 0) {
+      ref.current.focus();
+    }
+  }, [index]);
+
   return (
-    <>
-    {items.map(item => {
-      return (
-      <StyledItem 
-      key={item.id}
-      onClick={()=>purchase(numCookies, setNumCookies, purchasedItems, setPurchasedItems, item)}
-      >
-        <h2>{item.name}</h2>
-        <p>
-        Cost: <span>{item.cost} cookie(s)</span>, 
-        Produces <span>{item.value}</span> cookies/second.
-        </p>
-        <h2>{purchasedItems[item.id]}</h2>
-      </StyledItem>
-      )
-    })}
-    </>
+    <StyledItem 
+    key={item.id}
+    ref={ref}
+    onClick={()=>purchase(numCookies, setNumCookies, purchasedItems, setPurchasedItems, item)}
+    >
+      <h2>{item.name}</h2>
+      <p>
+      Cost: <span>{item.cost} cookie(s)</span>, 
+      Produces <span>{item.value}</span> cookies/second.
+      </p>
+      <h2>{purchasedItems[item.id]}</h2>
+    </StyledItem>
   )
 }
 
+//COOKIES PER SECOND
 const cookiesPerSec = ({purchasedItems}) => {
   let sum = 
   (purchasedItems.cursor) + 
@@ -59,12 +65,7 @@ const Game = () => {
     farm: 0,
   });
 
-//focus first item on page load
-  // const ref = React.useRef(null);
 
-  // React.useEffect(() => {
-  //   ref.current.focus();
-  // }, []);
 
 //cookie count updater
   useInterval(() => {
@@ -79,6 +80,7 @@ const Game = () => {
 //spacebar to click cookie
   useEffect(()=>{
     const handleKeydown = (ev) => {
+      ev.preventDefault();
       if (ev.repeat) { return };
       if (ev.code === 'Space') {
         setNumCookies(numCookies + 1);
@@ -104,13 +106,18 @@ const Game = () => {
 
       <ItemArea>
         <SectionTitle>Items:</SectionTitle>
-        <ItemMake 
-        items={items} 
-        numCookies={numCookies}
-        setNumCookies={setNumCookies}
-        purchasedItems={purchasedItems}
-        setPurchasedItems={setPurchasedItems}
-        />
+        {items.map((item, index)=> {
+          return (
+            <ItemMake
+            index={index}
+            item={item} 
+            numCookies={numCookies}
+            setNumCookies={setNumCookies}
+            purchasedItems={purchasedItems}
+            setPurchasedItems={setPurchasedItems}
+            />
+          )
+        })}
       </ItemArea>
     </StyledWrapper>
   );
@@ -134,7 +141,7 @@ const StyledItem = styled.button`
   color: whitesmoke;
   text-align: left;
   cursor: pointer;
-  &:focus {
+  &:active {
     border: 3px solid lime;
   }
 `;
@@ -143,6 +150,9 @@ const StyledButton = styled.button`
   border: none;
   background: transparent;
   cursor: pointer;
+  &:active {
+    transform: scale(0.9);
+  }
 `;
 
 const Cookie = styled.img`
